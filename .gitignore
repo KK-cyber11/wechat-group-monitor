@@ -1,3 +1,9 @@
 data/
 scripts/passive_ocr
 scripts/wx_input
+scripts/*.next
+
+groups.local.json
+__pycache__/
+*.pyc
+.DS_Store

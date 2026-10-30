@@ -17,7 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 OCR_BIN = Path(__file__).resolve().parent / "passive_ocr"
 
 def load_groups():
-    path = Path(__file__).resolve().parents[1] / "groups.json"
+    path = ROOT / "groups.local.json"
+    if not path.exists():
+        path = ROOT / "groups.json"
     if not path.exists():
         raise SystemExit("先在 groups.json 里写上要监控的群名")
     data = json.loads(path.read_text())
@@ -169,13 +171,23 @@ def parse_fp(fp: str):
     return fields
 
 
+def group_ids():
+    return [gid for gid, _key in GROUPS]
+
+
+def empty_fp():
+    parts = [f"{gid}=" for gid in group_ids()]
+    parts.append("open=")
+    return ";".join(parts)
+
+
 def merge_fp(prev: str, current: str):
     if not prev:
         return current, False, []
     old, new = parse_fp(prev), parse_fp(current)
     changed = []
     merged = []
-    for key in ("g0001", "g0002", "g0003", "open"):
+    for key in group_ids() + ["open"]:
         before, after = old.get(key, ""), new.get(key, "")
         if similar(before, after):
             merged.append(f"{key}={before}")
@@ -206,7 +218,7 @@ def main():
             payload = json.loads(proc.stdout or '{"windows":[]}')
             windows = payload.get("windows") or []
             if not windows:
-                current = "g0001=;g0002=;g0003=;open="
+                current = empty_fp()
                 briefs = []
             else:
                 current, briefs = canonical_fp(windows)

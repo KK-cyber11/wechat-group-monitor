@@ -1,7 +1,7 @@
 #!/bin/bash
-# Run from any machine. The folder is this script's parent, not a fixed path.
+# Only this launchd runner controls the WeChat desktop.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-open -b com.tencent.xinWeChat >/dev/null 2>&1 || true
+export WECHAT_MONITOR_RUNNER=launchd
 exec /usr/bin/python3 "$ROOT/scripts/collect_all_groups.py"
