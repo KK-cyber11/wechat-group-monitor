@@ -9,6 +9,7 @@ chat and the previous frontmost app.
 
 import fcntl
 import json
+import re
 import subprocess
 import sys
 import time
@@ -344,16 +345,31 @@ def main():
     }
 
 
+def visible_time_span(lines):
+    found = []
+    for line in lines:
+        text = str(line)
+        for match in re.finditer(r"(?:\d{1,2}月\d{1,2}日|\d{1,2}/\d{1,2}|昨天|前天)?\s*\d{1,2}:\d{2}", text):
+            label = re.sub(r"\s+", " ", match.group(0)).strip()
+            if label not in found:
+                found.append(label)
+    if not found:
+        return "屏幕上没有显示这段消息的发送时间。"
+    if len(found) == 1:
+        return f"屏幕上的消息时间：{found[0]}。"
+    return f"屏幕上的消息时间：{found[0]} 到 {found[-1]}。"
+
+
 def append_group_summary(gid, title, lines):
     if not lines:
         return
     path = ROOT / "data" / "groups" / gid / "summary.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_text(f"# {title}\n")
+        path.write_text(f"# {title}\n\n截图不保存。这里只留文字。\n")
     stamp = time.strftime("%Y-%m-%d %H:%M")
     with path.open("a") as handle:
-        handle.write(f"\n## {stamp}\n\n")
+        handle.write(f"\n## 检查于 {stamp}\n\n{visible_time_span(lines)}\n\n")
         for line in lines:
             text = str(line).strip()
             if text:
